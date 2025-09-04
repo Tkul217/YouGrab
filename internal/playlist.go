@@ -12,10 +12,10 @@ func DownloadPlaylist(url, outputPath, quality string, audioOnly, videoOnly bool
 	client := youtube.Client{}
 	playlist, err := client.GetPlaylist(url)
 	if err != nil {
-		return fmt.Errorf("ошибка получения плейлиста %s: %v", url, err)
+		return fmt.Errorf("Error fetching playlist %s: %v", url, err)
 	}
 
-	fmt.Printf("%s Плейлист: %s (%d видео)\n", pkg.Yellow("➤"), playlist.Title, len(playlist.Videos))
+	fmt.Printf("%s Playlist: %s (%d video)\n", pkg.Yellow("➤"), playlist.Title, len(playlist.Videos))
 
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, concurrent) // Limit concurrent downloads
@@ -29,12 +29,12 @@ func DownloadPlaylist(url, outputPath, quality string, audioOnly, videoOnly bool
 
 			videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", videoID)
 			if err := DownloadSingleVideo(videoURL, outputPath, quality, audioOnly, videoOnly, concurrent); err != nil {
-				fmt.Printf("%s Ошибка при скачивании видео %s: %v\n", pkg.Red("✗"), videoID, err)
+				fmt.Printf("%s Error downloading video %s: %v\n", pkg.Red("✗"), videoID, err)
 			}
 		}(video.ID)
 	}
 
 	wg.Wait()
-	fmt.Printf("%s Плейлист успешно скачан\n", pkg.Green("✓"))
+	fmt.Printf("%s Playlist downloaded successfully\n", pkg.Green("✓"))
 	return nil
 }

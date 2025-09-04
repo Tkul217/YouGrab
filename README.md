@@ -58,15 +58,15 @@ See all options:
 
 ## Example Output
 ```
-➤ Загружаем: Sample Video Title
-Выберите качество:
-  * Видео: video/mp4; codecs="avc1.640028", res: 1080p, fps: 30, ~150.5 MB (требуется слияние)
-    Видео: video/mp4; codecs="avc1.4d401f", res: 720p, fps: 30, ~80.2 MB
-    Видео: video/mp4; codecs="avc1.4d401e", res: 360p, fps: 30, ~40.1 MB
-✓ Выбрано: Видео: video/mp4; codecs="avc1.640028", res: 1080p, fps: 30, ~150.5 MB (требуется слияние)
-Скачивание Sample_Video_Title_video_temp.mp4 [===========>        ] 150.5MB/150.5MB
-Скачивание Sample_Video_Title_audio_temp.mp3 [===========>        ] 10.2MB/10.2MB
-✓ Видео с аудио скачано и объединено: downloads/Sample_Video_Title.mp4
+➤ Downloading: Sample Video Title
+Select quality:
+  * Video: video/mp4; codecs="avc1.640028", res: 1080p, fps: 30, ~150.5 MB (need a merge)
+    Video: video/mp4; codecs="avc1.4d401f", res: 720p, fps: 30, ~80.2 MB
+    Video: video/mp4; codecs="avc1.4d401e", res: 360p, fps: 30, ~40.1 MB
+✓ Selected: Video: video/mp4; codecs="avc1.640028", res: 1080p, fps: 30, ~150.5 MB (need a merge)
+Downloading... Sample_Video_Title_video_temp.mp4 [===========>        ] 150.5MB/150.5MB
+Downloading... Sample_Video_Title_audio_temp.mp3 [===========>        ] 10.2MB/10.2MB
+✓ Video with audio downloaded and merged: downloads/Sample_Video_Title.mp4
 ```
 
 ## Requirements

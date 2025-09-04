@@ -14,23 +14,23 @@ import (
 )
 
 func DownloadStream(client youtube.Client, video *youtube.Video, format *youtube.Format, outputPath, filename string) error {
-	fmt.Printf("%s Начинаем скачивание: %s\n", pkg.Yellow("➤"), filename)
+	fmt.Printf("%s Starting download: %s\n", pkg.Yellow("➤"), filename)
 	filePath := filepath.Join(outputPath, filename)
 	file, err := os.Create(filePath)
 	if err != nil {
-		return fmt.Errorf("ошибка создания файла %s: %v", filePath, err)
+		return fmt.Errorf("error creating file %s: %v", filePath, err)
 	}
 	defer file.Close()
 
 	reader, size, err := client.GetStream(video, format)
 	if err != nil {
-		return fmt.Errorf("ошибка получения потока: %v", err)
+		return fmt.Errorf("error fetching stream: %v", err)
 	}
 	defer reader.Close()
 
 	bar := progressbar.NewOptions64(
 		size,
-		progressbar.OptionSetDescription(fmt.Sprintf("Скачивание %s", filename)),
+		progressbar.OptionSetDescription(fmt.Sprintf("Downloading %s", filename)),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			Saucer:        "=",
 			SaucerHead:    ">",
@@ -45,22 +45,22 @@ func DownloadStream(client youtube.Client, video *youtube.Video, format *youtube
 	teeReader := io.TeeReader(reader, bar)
 	_, err = io.Copy(file, teeReader)
 	if err != nil {
-		return fmt.Errorf("ошибка скачивания: %v", err)
+		return fmt.Errorf("download error: %v", err)
 	}
-	fmt.Printf("%s Скачивание завершено: %s\n", pkg.Green("✓"), filePath)
+	fmt.Printf("%s Download completed: %s\n", pkg.Green("✓"), filePath)
 	return nil
 }
 
 func MergeVideoAudio(videoPath, audioPath, outputPath string) error {
-	fmt.Printf("%s Слияние видео и аудио в %s\n", pkg.Yellow("➤"), outputPath)
+	fmt.Printf("%s Merging video and audio into %s\n", pkg.Yellow("➤"), outputPath)
 	// Use -shortest to avoid duration mismatches
 	cmd := exec.Command("ffmpeg", "-i", videoPath, "-i", audioPath, "-c:v", "copy", "-c:a", "copy", "-map", "0:v:0", "-map", "1:a:0", "-shortest", outputPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("ошибка слияния: %v", err)
+		return fmt.Errorf("merge error: %v", err)
 	}
-	fmt.Printf("%s Слияние завершено\n", pkg.Green("✓"))
+	fmt.Printf("%s Merge completed\n", pkg.Green("✓"))
 	return nil
 }
 
@@ -68,19 +68,19 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 	client := youtube.Client{}
 	video, err := client.GetVideo(url)
 	if err != nil {
-		return fmt.Errorf("ошибка получения видео %s: %v", url, err)
+		return fmt.Errorf("error fetching video %s: %v", url, err)
 	}
 
-	fmt.Printf("%s Загружаем: %s\n", pkg.Yellow("➤"), video.Title)
+	fmt.Printf("%s Downloading: %s\n", pkg.Yellow("➤"), video.Title)
 
 	// Clean filename
 	safeTitle := strings.ReplaceAll(video.Title, "/", "_")
 	safeTitle = strings.ReplaceAll(safeTitle, "\\", "_")
 
 	// Get stream sizes and debug all formats
-	fmt.Printf("%s Все доступные форматы для видео:\n", pkg.Yellow("➤"))
+	fmt.Printf("%s All available formats for video:\n", pkg.Yellow("➤"))
 	for _, format := range video.Formats {
-		fmt.Printf("  Формат: %s, QualityLabel: %s, AudioChannels: %d, Bitrate: %d, FPS: %d\n",
+		fmt.Printf("  Format: %s, QualityLabel: %s, AudioChannels: %d, Bitrate: %d, FPS: %d\n",
 			format.MimeType, format.QualityLabel, format.AudioChannels, format.Bitrate, format.FPS)
 	}
 
@@ -91,7 +91,7 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 		if err == nil {
 			sizeMap[format.QualityLabel] = size
 		} else {
-			fmt.Printf("%s Ошибка получения размера для формата %s: %v\n", pkg.Red("✗"), format.QualityLabel, err)
+			fmt.Printf("%s Error getting size for format %s: %v\n", pkg.Red("✗"), format.QualityLabel, err)
 		}
 	}
 
@@ -102,7 +102,7 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 	if audioOnly {
 		streams := video.Formats.WithAudioChannels()
 		if len(streams) == 0 {
-			return fmt.Errorf("аудиопотоки не найдены")
+			return fmt.Errorf("audio streams not found")
 		}
 		if quality == "" {
 			stream, _, err = SelectQuality(streams, true, sizeMap)
@@ -117,7 +117,7 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 				}
 			}
 			if stream.QualityLabel == "" {
-				fmt.Printf("%s Аудио с качеством %s не найдено, выбираем лучшее\n", pkg.Yellow("!"), quality)
+				fmt.Printf("%s Audio with quality %s not found, selecting the best\n", pkg.Yellow("!"), quality)
 				for _, format := range streams {
 					if stream.QualityLabel == "" || format.Bitrate > stream.Bitrate {
 						stream = format
@@ -135,7 +135,7 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 			}
 		}
 		if len(filtered) == 0 {
-			return fmt.Errorf("видеопотоки без аудио не найдены")
+			return fmt.Errorf("video streams without audio not found")
 		}
 		if quality == "" {
 			stream, _, err = SelectQuality(filtered, false, sizeMap)
@@ -150,7 +150,7 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 				}
 			}
 			if stream.QualityLabel == "" {
-				fmt.Printf("%s Видео с качеством %s не найдено, выбираем лучшее\n", pkg.Yellow("!"), quality)
+				fmt.Printf("%s Video with quality %s not found, selecting the best\n", pkg.Yellow("!"), quality)
 				for _, format := range filtered {
 					if stream.QualityLabel == "" || format.Height > stream.Height {
 						stream = format
@@ -163,10 +163,10 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 		// Use all video streams, prefer progressive if available
 		streams := video.Formats.Type("video")
 		if len(streams) == 0 {
-			return fmt.Errorf("видеопотоки не найдены")
+			return fmt.Errorf("video streams not found")
 		}
 
-		fmt.Printf("%s Найдено %d видеопотоков\n", pkg.Yellow("➤"), len(streams))
+		fmt.Printf("%s Found %d video streams\n", pkg.Yellow("➤"), len(streams))
 
 		if quality == "" {
 			stream, needsMerge, err = SelectQuality(streams, false, sizeMap)
@@ -194,7 +194,7 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 		filename = safeTitle + ".mp4"
 	}
 
-	fmt.Printf("%s Выбран формат: %s (needsMerge: %v)\n", pkg.Yellow("➤"), stream.QualityLabel, needsMerge)
+	fmt.Printf("%s Selected format: %s (needsMerge: %v)\n", pkg.Yellow("➤"), stream.QualityLabel, needsMerge)
 
 	if needsMerge {
 		// Download video
@@ -206,19 +206,19 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 		// Download audio
 		var audioStream youtube.Format
 		audioStreams := video.Formats.WithAudioChannels()
-		fmt.Printf("%s Доступные аудиопотоки:\n", pkg.Yellow("➤"))
+		fmt.Printf("%s Available audio streams:\n", pkg.Yellow("➤"))
 		for _, format := range audioStreams {
-			fmt.Printf("  Аудио: %s, bitrate: %d kbps\n", format.MimeType, format.Bitrate/1000)
+			fmt.Printf("  Audio: %s, bitrate: %d kbps\n", format.MimeType, format.Bitrate/1000)
 		}
 		if len(audioStreams) == 0 {
-			return fmt.Errorf("аудиопотоки не найдены для слияния")
+			return fmt.Errorf("audio streams not found for merging")
 		}
 		for _, format := range audioStreams {
 			if audioStream.QualityLabel == "" || format.Bitrate > audioStream.Bitrate {
 				audioStream = format
 			}
 		}
-		fmt.Printf("%s Выбран аудиоформат: %s\n", pkg.Yellow("➤"), audioStream.QualityLabel)
+		fmt.Printf("%s Selected audio format: %s\n", pkg.Yellow("➤"), audioStream.QualityLabel)
 		audioFile := filepath.Join(outputPath, safeTitle+"_audio_temp.mp3")
 		if err := DownloadStream(client, video, &audioStream, outputPath, filepath.Base(audioFile)); err != nil {
 			return err
@@ -227,17 +227,17 @@ func DownloadSingleVideo(url, outputPath, quality string, audioOnly, videoOnly b
 		// Merge with ffmpeg
 		finalFile := filepath.Join(outputPath, filename)
 		if err := MergeVideoAudio(videoFile, audioFile, finalFile); err != nil {
-			return fmt.Errorf("ошибка слияния: %v", err)
+			return fmt.Errorf("merge error: %v", err)
 		}
 
 		// Remove temporary files
 		if err := os.Remove(videoFile); err != nil {
-			fmt.Printf("%s Ошибка удаления временного файла %s: %v\n", pkg.Red("✗"), videoFile, err)
+			fmt.Printf("%s Error removing temporary file %s: %v\n", pkg.Red("✗"), videoFile, err)
 		}
 		if err := os.Remove(audioFile); err != nil {
-			fmt.Printf("%s Ошибка удаления временного файла %s: %v\n", pkg.Red("✗"), audioFile, err)
+			fmt.Printf("%s Error removing temporary file %s: %v\n", pkg.Red("✗"), audioFile, err)
 		}
-		fmt.Printf("%s Видео с аудио скачано и объединено: %s\n", pkg.Green("✓"), finalFile)
+		fmt.Printf("%s Video with audio downloaded and merged: %s\n", pkg.Green("✓"), finalFile)
 	} else {
 		// Simple download
 		if err := DownloadStream(client, video, &stream, outputPath, filename); err != nil {
